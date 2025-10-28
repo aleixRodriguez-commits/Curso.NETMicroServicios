@@ -1,4 +1,4 @@
-namespace webapi
+namespace webapi.clases
 {
     public class Ingrediente
     {
