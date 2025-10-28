@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using webapi.common.domain;
+using Curso.NETMicroServicios.common.domain;
 
-namespace webapi.features.pizza.domain;
+namespace Curso.NETMicroServicios.features.pizza.domain;
 
 public class Ingredient : Entity
 {

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace webapi.common.domain;
+namespace Curso.NETMicroServicios.common.domain;
 
 
 public record Email(string Value)

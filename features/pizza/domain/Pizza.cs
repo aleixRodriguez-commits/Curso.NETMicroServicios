@@ -1,6 +1,6 @@
-namespace webapi.features.pizza.domain;
+namespace Curso.NETMicroServicios.features.pizza.domain;
 
-using webapi.common.domain;
+using Curso.NETMicroServicios.common.domain;
 
 public class Pizza : Entity
 {
@@ -125,4 +125,128 @@ public static class PizzaValidator
             throw new ArgumentException("La URL no tiene un formato válido. Debe ser una URL HTTP o HTTPS.", nameof(url));
         }
     }
+}
+
+namespace Curso.NETMicroServicios.features.pizza.domain;
+
+using FluentValidation;
+using Curso.NETMicroServicios.common.domain;
+
+public class Pizza : Entity
+{
+    private const decimal PROFIT = 1.20m;
+    private static readonly PizzaValidator _validator = new();
+    
+    public string Name { get; protected set; }
+    public string Description { get; protected set; }
+    public string Url { get; protected set; }
+
+    public decimal Price => _ingredients.Sum(i => i.Cost) * PROFIT;
+
+    public IReadOnlyCollection<Ingredient> Ingredients => _ingredients.ToList().AsReadOnly();
+
+    protected HashSet<Ingredient> _ingredients = [];
+
+    protected Pizza(Guid id, string name, string description, string url) : base(id)
+    {
+        Name = name;
+        Description = description;
+        Url = url;
+        
+        _validator.ValidateAndThrow(this);
+    }
+
+    public void AddIngredient(Ingredient ingredient)
+    {
+        _validator.ValidateIngredient(ingredient);
+        _ingredients.Add(ingredient);
+    }
+
+    public void RemoveIngredient(Ingredient ingredient)
+    {
+        _validator.ValidateIngredientRemoval(ingredient, _ingredients);
+        _ingredients.Remove(ingredient);
+    }
+
+    public void Update(string name, string description, string url)
+    {
+        Name = name;
+        Description = description;
+        Url = url;
+        
+        _validator.ValidateAndThrow(this);
+    }
+
+    public static Pizza Create(Guid id, string name, string description, string url)
+    {
+        var pizza = new Pizza(id, name, description, url);
+        //create pizza:create
+        return pizza;
+    }
+}
+
+//https://docs.fluentvalidation.net/en/latest/
+
+public class PizzaValidator : AbstractValidator<Pizza>
+{
+    public PizzaValidator()
+    {
+        RuleFor(p => p.Name)
+            .NotEmpty()
+            .WithMessage("El nombre de la pizza es requerido.")
+            .MinimumLength(3)
+            .WithMessage("El nombre debe tener al menos 3 caracteres.")
+            .MaximumLength(100)
+            .WithMessage("El nombre no puede exceder los 100 caracteres.");
+
+        RuleFor(p => p.Description)
+            .NotEmpty()
+            .WithMessage("La descripción de la pizza es requerida.")
+            .MinimumLength(10)
+            .WithMessage("La descripción debe tener al menos 10 caracteres.")
+            .MaximumLength(500)
+            .WithMessage("La descripción no puede exceder los 500 caracteres.");
+
+        RuleFor(p => p.Url)
+            .NotEmpty()
+            .WithMessage("La URL de la imagen es requerida.")
+            .Must(BeAValidUrl)
+            .WithMessage("La URL no tiene un formato válido. Debe ser una URL HTTP o HTTPS.");
+    }
+
+    public void ValidateIngredient(Ingredient ingredient)
+    {
+        if (ingredient == null)
+        {
+            throw new PizzaDomainException("El ingrediente no puede ser nulo.");
+        }
+    }
+
+    public void ValidateIngredientRemoval(Ingredient ingredient, HashSet<Ingredient> ingredients)
+    {
+        ValidateIngredient(ingredient);
+
+        if (!ingredients.Contains(ingredient))
+        {
+            throw new IngredientNotFoundException("El ingrediente no existe en la pizza.");
+        }
+    }
+
+    private bool BeAValidUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+}
+
+// Excepciones de dominio
+public class PizzaDomainException(string message) : Exception(message)
+{
+}
+
+public class IngredientNotFoundException(string message) : PizzaDomainException(message)
+{
 }

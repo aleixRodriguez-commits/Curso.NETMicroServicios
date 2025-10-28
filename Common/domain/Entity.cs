@@ -1,4 +1,4 @@
-namespace webapi.common.domain;
+namespace Curso.NETMicroServicios.common.domain;
 public abstract class Entity(Guid id) //No se puede instanciar directamente. Sirve como clase base para las entidades del dominio
 {
     public Guid Id { get; init; } = id; //Solo lectura despues de inicializar
