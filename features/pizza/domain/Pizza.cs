@@ -1,4 +1,4 @@
-namespace Curso.NETMicroServicios.features.pizza.domain;
+/*namespace Curso.NETMicroServicios.features.pizza.domain;
 
 using Curso.NETMicroServicios.common.domain;
 
@@ -125,7 +125,8 @@ public static class PizzaValidator
             throw new ArgumentException("La URL no tiene un formato válido. Debe ser una URL HTTP o HTTPS.", nameof(url));
         }
     }
-}
+}*/
+
 
 namespace Curso.NETMicroServicios.features.pizza.domain;
 
