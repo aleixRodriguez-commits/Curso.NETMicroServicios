@@ -137,10 +137,10 @@ public class Pizza : Entity
 {
     private const decimal PROFIT = 1.20m;
     private static readonly PizzaValidator _validator = new();
-    
-    public string Name { get; protected set; }
-    public string Description { get; protected set; }
-    public string Url { get; protected set; }
+
+    public string Name { get; protected set; } = string.Empty;
+    public string Description { get; protected set; } = string.Empty;
+    public string Url { get; protected set; } = string.Empty;
 
     public decimal Price => _ingredients.Sum(i => i.Cost) * PROFIT;
 
@@ -150,11 +150,11 @@ public class Pizza : Entity
 
     protected Pizza(Guid id, string name, string description, string url) : base(id)
     {
+        ValidateAndSet(name, description, url);
+
         Name = name;
         Description = description;
         Url = url;
-        
-        _validator.ValidateAndThrow(this);
     }
 
     public void AddIngredient(Ingredient ingredient)
@@ -171,11 +171,16 @@ public class Pizza : Entity
 
     public void Update(string name, string description, string url)
     {
+        ValidateAndSet(name, description, url);
+    }
+
+    private void ValidateAndSet(string name, string description, string url)
+    {        
+        _validator.ValidateAndThrow((name, description, url));
+        
         Name = name;
         Description = description;
         Url = url;
-        
-        _validator.ValidateAndThrow(this);
     }
 
     public static Pizza Create(Guid id, string name, string description, string url)
@@ -188,11 +193,12 @@ public class Pizza : Entity
 
 //https://docs.fluentvalidation.net/en/latest/
 
-public class PizzaValidator : AbstractValidator<Pizza>
+// Validator único que valida tuplas Y lógica de ingredientes
+public class PizzaValidator : AbstractValidator<(string Name, string Description, string Url)>
 {
     public PizzaValidator()
     {
-        RuleFor(p => p.Name)
+        RuleFor(x => x.Name)
             .NotEmpty()
             .WithMessage("El nombre de la pizza es requerido.")
             .MinimumLength(3)
@@ -200,7 +206,7 @@ public class PizzaValidator : AbstractValidator<Pizza>
             .MaximumLength(100)
             .WithMessage("El nombre no puede exceder los 100 caracteres.");
 
-        RuleFor(p => p.Description)
+        RuleFor(x => x.Description)
             .NotEmpty()
             .WithMessage("La descripción de la pizza es requerida.")
             .MinimumLength(10)
@@ -208,7 +214,7 @@ public class PizzaValidator : AbstractValidator<Pizza>
             .MaximumLength(500)
             .WithMessage("La descripción no puede exceder los 500 caracteres.");
 
-        RuleFor(p => p.Url)
+        RuleFor(x => x.Url)
             .NotEmpty()
             .WithMessage("La URL de la imagen es requerida.")
             .Must(BeAValidUrl)
@@ -244,7 +250,7 @@ public class PizzaValidator : AbstractValidator<Pizza>
 }
 
 // Excepciones de dominio
-public class PizzaDomainException(string message) : Exception(message)
+public class PizzaDomainException(string message) : DomainException(message)
 {
 }
 

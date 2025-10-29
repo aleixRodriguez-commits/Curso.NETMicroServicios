@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
-using Curso.NETMicroServicios.common.domain;
+
+/*using Curso.NETMicroServicios.common.domain;
 
 namespace Curso.NETMicroServicios.features.pizza.domain;
 
@@ -76,4 +76,65 @@ public static class IngredientValidator
             throw new ArgumentException("El costo del ingrediente no puede exceder los 10,000.", nameof(cost));
         }
     }
+}*/
+
+using FluentValidation;
+using Curso.NETMicroServicios.common.domain;
+
+namespace Curso.NETMicroServicios.features.pizza.domain;
+
+public class Ingredient : Entity
+{
+    private static readonly IngredientValidator _validator = new();
+
+    public string Name { get; protected set; } = string.Empty;
+    public decimal Cost { get; protected set; }
+
+    protected Ingredient(Guid id, string name, decimal cost) : base(id)
+    {
+        ValidateAndSet(name, cost);
+    }
+
+    public void Update(string name, decimal cost)
+    {
+        ValidateAndSet(name, cost);
+    }
+
+    private void ValidateAndSet(string name, decimal cost)
+    {
+        // Validación temprana con tupla antes de asignar valores
+        _validator.ValidateAndThrow((name, cost));
+        
+        Name = name;
+        Cost = cost;
+    }
+
+    public static Ingredient Create(Guid id, string name, decimal cost)
+    {
+        var ingredient = new Ingredient(id, name, cost);
+        //Eventos del dominio
+        return ingredient;
+    }
 }
+
+public class IngredientValidator : AbstractValidator<(string Name, decimal Cost)>
+{
+    public IngredientValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .WithMessage("El nombre del ingrediente es requerido.")
+            .MinimumLength(2)
+            .WithMessage("El nombre debe tener al menos 2 caracteres.")
+            .MaximumLength(50)
+            .WithMessage("El nombre no puede exceder los 50 caracteres.");
+
+        RuleFor(x => x.Cost)
+            .GreaterThan(0)
+            .WithMessage("El costo del ingrediente debe ser mayor a cero.")
+            .LessThanOrEqualTo(10000)
+            .WithMessage("El costo del ingrediente no puede exceder los 10,000.");
+    }
+}
+
+
