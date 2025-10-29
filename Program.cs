@@ -1,8 +1,21 @@
 using Curso.NETMicroServicios.common.dependencyinjection;
 using Curso.NETMicroServicios.common;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Curso.NETMicroServicios.Infrastucture;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseInMemoryDatabase("PizzaDb");
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -22,6 +35,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 
 var summaries = new[]
 {
